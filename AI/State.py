@@ -10,7 +10,7 @@ class State:
     # TODO: calcula features, com base nos valores dos sensores. 
 	def compute_features(self):
         # Abaixo, usamos como features apenas os sensores propriamente ditos. Os grupos podem aumentar
-        # o conjunto de features para fornecer ao agente mais informacoes relevantes à escolha de acoes
+        # o conjunto de features para fornecer ao agente mais informacoes relevantes para a escolha de acoes
 		return [self.dist_enemy, self.enemy_sight, self.dist_arrow, self.arrow_sight]
 
 	# TODO: funcao responsavel por discretizar as features calculadas por compute_features(). O numero de niveis
@@ -21,17 +21,17 @@ class State:
 	def discretize_features(self, features):
 		pass
 
-	# TODO: deve retornar um vetor onde o i-ésimo elemento é o numero de niveis usados pra discretizar a i-ésima feature calculada por compute_features
+	# TODO: deve retornar um vetor onde o i-esimo elemento eh o numero de niveis usados pra discretizar a i-esima feature calculada por compute_features
 	def discretization_levels(self):
 		pass
 
-# retorna o estado propriamente dito do sistema---isto é, um vetor discreto de features, para utilizacao no algoritmo Q-Learning
+# retorna o estado propriamente dito do sistema---ou seja, um vetor discreto de features, para utilizacao no algoritmo Q-Learning
 	def get_state(self):
 		features = self.compute_features()
 		features = self.discretize_features(features)
 		return features
 
-    # calcula um identificador unico para cada estado do sistema (isto é, mapeia o conjunto de features discretizas de estado para um valor inteiro unico)
+    # calcula um identificador unico para cada estado do sistema (ou seja, mapeia o conjunto de features discretizas de estado para um valor inteiro unico)
 	def get_state_id(self, features): 
 		primos=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193]
 	   

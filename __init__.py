@@ -9,7 +9,7 @@ if __name__ == '__main__':
             print "         learn: aplica o algoritmo de aprendizado"
             print "         evaluate: exibe o jogo, permite avaliar os pesos encontrados"
             print "         [lazy_bot|random_bot|normal_bot|ninja_bot]: modo do bot"
-            print "         arquivo de pesos: deve conter os pesos iniciais para as features do sistema (pode ser omitido no modo learn)"
+            print "         arquivo de pesos: deve conter os valores iniciais de Q (pode ser omitido no modo learn)"
         else:
             if argv[1] == "learn":
                 if len(argv) == 4:
