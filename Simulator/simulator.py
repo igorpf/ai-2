@@ -27,6 +27,10 @@ enemy_speed = 0
 gladiator_speed = 0
 collision = True
 
+
+def compute_performance(survival_time, max_time, hit_time):
+	return (0.5 * (survival_time/max_time) + 0.5 * ( (max_time-hit_time) / max_time)) - 0.5
+
 def create_bullet(robot):
 	vs = [(-30,0), (0,3), (10,0), (0,-3)]
 	mass = 1
@@ -269,6 +273,7 @@ def game(mode, load, bot_type):
 	fov_shooting = fov/2
 
 	while(episode < 10):
+		perf = 0
 		reward = 0
 		total_rw = 0
 		action = 0
@@ -504,27 +509,31 @@ def game(mode, load, bot_type):
 			actions = float(actions)
 			if collision == True:
 				ep_ended = True
+				perf += -0.5
 				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "collision")
 				total_rw += reward
-				print "Colisao"
+				print "Colisao: %f" % (perf)
 				running = False
 			elif gladiator_win == True:
 				ep_ended = True
+				perf += compute_performance(900, 900, actions)
 				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "won")
 				total_rw += reward
-				print "Player venceu"
+				print "Player venceu: %f" % (perf)
 				running = False
 			elif enemy_win == True:
 				ep_ended = True
+				perf += compute_performance(actions, 900, 900)
 				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "lost")
 				total_rw += reward
-				print "Bot venceu"
+				print "Bot venceu: %f" % (perf)
 				running = False
 			elif actions == 900:
 				ep_ended = True
+				perf += compute_performance(actions, 900, 900)
 				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "draw")
 				total_rw += reward
-				print "Empate"
+				print "Empate: %f" % (perf)
 				running = False
 			else:
 				ep_ended = False
