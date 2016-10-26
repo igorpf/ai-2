@@ -11,9 +11,10 @@ from itertools import (takewhile,repeat)
 
 #Conta a quantidade de linhas de um arquivo
 #retirado de http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python
+#e adaptado para funcionar em Python 2
 def rawincount(filename):
     f = open(filename, 'rb')
-    bufgen = takewhile(lambda x: x, (f.raw.read(1024*1024) for _ in repeat(None)))
+    bufgen = takewhile(lambda x: x, (f.read(1024*1024) for _ in repeat(None)))
     return sum( buf.count(b'\n') for buf in bufgen )
 
 class Controller:
