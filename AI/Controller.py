@@ -71,12 +71,24 @@ class Controller:
     # Todas essas informacoes podem ser usadas para determinar que recompensa voce quer dar para o agente nessa situacao
 	def compute_reward(self, action, prev_state, curr_state, nsteps, isEpisodeOver, howEpisodeEnded):
         # Igor -> Falta melhorar a recompensa
-		if howEpisodeEnded == "win":
-			return 100
-		elif howEpisodeEnded == "lost" or howEpisodeEnded == "collision":
-			return -100
+		reward = 0
+		if isEpisodeOver:
+			if howEpisodeEnded == "win":
+				reward = 5
+			elif howEpisodeEnded == "lost" or howEpisodeEnded == "collision":
+				reward = -5
+			else:
+				reward = -1
 		else:
-			return -0.4
+			reward=-0.08
+			prev_feats = prev_state.discretize_features(prev_state.compute_features())
+			curr_feats = curr_state.discretize_features(curr_state.compute_features())
+			if prev_feats[1] and action==4: #se o inimigo estava à vista e atirou
+				reward=2
+			if not prev_feats[1] and action==4: #atirou sem ver
+				reward=-2
+		reward *= 0.99 ** nsteps #diminuindo as recompensas futuras
+		return reward
 
 	# TODO: Deve consultar a tabela Q e escolher uma acao de acordo com a politica de exploracao
 	# Retorna 1 caso a acao desejada seja direita, 2 caso seja esquerda, 3 caso seja nula, e 4 caso seja atirar
@@ -94,4 +106,14 @@ class Controller:
 	# Recebe como o parametro a acao executada, o estado anterior e posterior a execucao dessa acao,
 	# a recompensa obtida e um booleano indicando se o episodio acabou apos a execucao da acao
 	def updateQ(self, action, prev_state, curr_state, reward, isEpisodeOver):
-		pass
+		alpha = 0.5
+		gama = 1
+		prev_feats = prev_state.discretize_features(prev_state.compute_features())
+		curr_feats = curr_state.discretize_features(curr_state.compute_features())
+
+		keys = [tuple(curr_feats + [act]) for act in [1, 2, 3, 4]]
+		look_up_Q = [tuple([key, self.table_Q[key]]) for key in keys]
+		best_action = sorted(look_up_Q, key=(lambda x: x[1]), reverse=True)[0][1]
+
+		prev_state_key = tuple(prev_feats+[action])
+		self.table_Q[prev_state_key] = (1-alpha)*self.table_Q[prev_state_key]  + alpha*(reward+ gama* best_action)

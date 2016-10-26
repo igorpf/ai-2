@@ -7,7 +7,7 @@ class State:
 		self.dist_arrow = dist_arrow
 		self.arrow_sight = arrow_sight
 		#Na ordem das features
-		self.levels = [4,2,4,2]
+		self.levels = [20,2,4,2]
 
 
     # TODO: calcula features, com base nos valores dos sensores.
