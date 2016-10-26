@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from .State import State
 from random import randint
 import numpy
@@ -6,6 +7,14 @@ import random
 import datetime, time
 import operator
 import os
+from itertools import (takewhile,repeat)
+
+#Conta a quantidade de linhas de um arquivo
+#retirado de http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python
+def rawincount(filename):
+    f = open(filename, 'rb')
+    bufgen = takewhile(lambda x: x, (f.raw.read(1024*1024) for _ in repeat(None)))
+    return sum( buf.count(b'\n') for buf in bufgen )
 
 class Controller:
 
@@ -14,16 +23,31 @@ class Controller:
 		self.init_table_Q(load, state)
 
 
-    # TODO: carrega a tabela Q de um arquivo (se load!=None, entao load ira conter o nome do arquivo a ser carregado), 
+    # TODO: carrega a tabela Q de um arquivo (se load!=None, entao load ira conter o nome do arquivo a ser carregado),
     # ou, caso load==None, a funcao de inicializar uma tabela Q manualmente.
-    # Dica: a tabela Q possui um valor para cada possivel par de estado e acao. Cada objeto do tipo State possui um id unico 
-    # (calculado por State.get_state_id), o qual pode ser usado para indexar a sua tabela Q, juntamente com o indice da acao. 
-    # Para criacao da tabela Q, pode ser importante saber o numero total de estados do sistema. Isso dependera de quantas features 
+    # Dica: a tabela Q possui um valor para cada possivel par de estado e acao. Cada objeto do tipo State possui um id unico
+    # (calculado por State.get_state_id), o qual pode ser usado para indexar a sua tabela Q, juntamente com o indice da acao.
+    # Para criacao da tabela Q, pode ser importante saber o numero total de estados do sistema. Isso dependera de quantas features
     # voce utilizar e em quantos niveis ira discretiza-las (ver arquivo State.py para mais detalhes). O numero total de
     # estados do sistema pode ser obtido atraves do metodo State.get_n_states.
     # Uma lista completa com os estados propriamente ditos pode ser obtida atraves do metodo State.states_list.
 	def init_table_Q(self,load, state):
-		pass
+		states = state.states_list()
+		if load != None:
+			if len(states)*4 != rawincount(load) :
+				print "Número de valores está errado!"
+				exit()
+			else:
+				file = open(load)
+		self.table_Q = {}
+		for state in states:
+			for action in [1,2,3,4]:
+				# listas não são hashable, por isso transformo para tupla para usar no dicionário, que possui acesso
+				# eficiente
+				self.table_Q[tuple(state+[action])] = file.readline() if load !=None else random.random()
+		if load != None:
+			file.close()
+
 		'''if load == None:
 			#ler arquivo para inicializar Q
 		else:
@@ -36,6 +60,8 @@ class Controller:
 			if not os.path.exists("./params"):
 				os.makedirs("./params")
 			output = open("./params/%s.txt" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d%H%M%S'), "w+")
+			for state in sorted(self.table_Q):
+				output.write(str(self.table_Q[state])+"\n")
 
 	# TODO: funcao que calcula recompensa a cada passo
 	# Recebe como o parametro a acao executada, o estado anterior e posterior a execucao dessa acao,
@@ -43,17 +69,25 @@ class Controller:
 	# Caso o episodio tenha terminado, o ultimo parametro especifica como ele terminou (IA "won", IA "lost", "draw" ou "collision")
     # Todas essas informacoes podem ser usadas para determinar que recompensa voce quer dar para o agente nessa situacao
 	def compute_reward(self, action, prev_state, curr_state, nsteps, isEpisodeOver, howEpisodeEnded):
-        # Abaixo, um exemplo de funcao de recompensa super simples (mas provavelmente nao muito efetiva)
+        # Igor -> Falta melhorar a recompensa
 		if howEpisodeEnded == "win":
 			return 100
-		else: return -100
-
+		elif howEpisodeEnded == "lost" or howEpisodeEnded == "collision":
+			return -100
+		else:
+			return -0.4
 
 	# TODO: Deve consultar a tabela Q e escolher uma acao de acordo com a politica de exploracao
 	# Retorna 1 caso a acao desejada seja direita, 2 caso seja esquerda, 3 caso seja nula, e 4 caso seja atirar
 	def take_action(self, state):
-		pass
-
+		feats = state.discretize_features(state.compute_features())
+		keys = [tuple(feats+[act]) for act in [1,2,3,4]]
+		look_up_Q = [tuple([key,self.table_Q[key]]) for key in keys]
+		best_actions = sorted(look_up_Q, key=(lambda x: x[1]) ,reverse=True)
+		if random.random() < 0.1: #experimenta coisas novas em 10% das vezes
+			return best_actions[randint(1,3)][0][-1]
+		else:
+			return best_actions[0][0][-1]
 
 	# TODO: Implementa a regra de atualziacao do Q-Learning.
 	# Recebe como o parametro a acao executada, o estado anterior e posterior a execucao dessa acao,

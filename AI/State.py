@@ -1,13 +1,16 @@
+# -*- coding: utf-8 -*-
 class State:
-	def __init__(self,dist_enemy, enemy_sight, dist_arrow, arrow_sight):		
+	def __init__(self,dist_enemy, enemy_sight, dist_arrow, arrow_sight):
         # grava no estado o valor dos sensores do robo. Esses sensores serao utilizados no calculo de features (em compute_features)
-		self.dist_enemy = dist_enemy 
+		self.dist_enemy = dist_enemy
 		self.enemy_sight = enemy_sight
-		self.dist_arrow = dist_arrow 
+		self.dist_arrow = dist_arrow
 		self.arrow_sight = arrow_sight
+		#Na ordem das features
+		self.levels = [4,2,4,2]
 
 
-    # TODO: calcula features, com base nos valores dos sensores. 
+    # TODO: calcula features, com base nos valores dos sensores.
 	def compute_features(self):
         # Abaixo, usamos como features apenas os sensores propriamente ditos. Os grupos podem aumentar
         # o conjunto de features para fornecer ao agente mais informacoes relevantes para a escolha de acoes
@@ -19,11 +22,21 @@ class State:
     # a respeito do que esta ocorrendo---p.ex., a respeito da distancia exata do inimigo, etc. Os niveis
     # de discretizacao utilizados precisam ser informados pela funcao discretization_levels
 	def discretize_features(self, features):
-		pass
+		def put_in_range(features, chosenFeat, upperBound):
+			ranges = [(i+1)* (upperBound/self.levels[chosenFeat]) for i in range(self.levels[chosenFeat])]
+			for i in range(self.levels[chosenFeat]):
+				if features[chosenFeat] < ranges[i]:
+					features[chosenFeat] = i
+					break
+			return features
+		features = put_in_range(features, 0, 1050)
+		features = put_in_range(features, 2, 1050)
+		return features
+
 
 	# TODO: deve retornar um vetor onde o i-esimo elemento eh o numero de niveis usados pra discretizar a i-esima feature calculada por compute_features
 	def discretization_levels(self):
-		pass
+		return self.levels
 
 # retorna o estado propriamente dito do sistema---ou seja, um vetor discreto de features, para utilizacao no algoritmo Q-Learning
 	def get_state(self):
@@ -32,9 +45,9 @@ class State:
 		return features
 
     # calcula um identificador unico para cada estado do sistema (ou seja, mapeia o conjunto de features discretizas de estado para um valor inteiro unico)
-	def get_state_id(self, features): 
+	def get_state_id(self, features):
 		primos=[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193]
-	   
+
 		terms = [primos[i]**features[i] for i in range(len(features))]
 
 		s_id=1
