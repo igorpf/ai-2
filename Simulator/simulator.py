@@ -554,6 +554,7 @@ def game(mode, load, bot_type):
 					episode += 1
 					
 		if mode == "learn":
+			ep_ended = True
 			reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, final_event)
 			total_rw += reward
 			controller.updateQ(action, prev_state, controller.state, reward, ep_ended)
