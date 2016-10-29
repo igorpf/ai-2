@@ -395,13 +395,16 @@ def game(mode, load, bot_type):
 			controller.state = AI.State(dist_enemy, int(enemy_in_fov), g_distance_to_bullet, int(g_bullet_in_fov))
 		
 			if mode == "learn" and actions > 0:
+				ep_ended = False
+				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "step")
+				total_rw += reward
 				controller.updateQ(action, prev_state, controller.state, reward, ep_ended)
-
 
 			prev_state = controller.state
 
 			action = controller.take_action(controller.state)
 			actions += 1
+
 	
 			
 			if action == 4 and gladiator_shot == False:
@@ -506,43 +509,32 @@ def game(mode, load, bot_type):
 
 				pygame.display.flip()
 	
+			final_event = None
 			actions = float(actions)
 			if collision == True:
 				ep_ended = True
 				perf += -0.5
-				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "collision")
-				total_rw += reward
+				final_event = "collision"
 				print "Colisao: %f" % (perf)
 				running = False
 			elif gladiator_win == True:
 				ep_ended = True
 				perf += compute_performance(900, 900, actions)
-				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "won")
-				total_rw += reward
+				final_event = "won"
 				print "Player venceu: %f" % (perf)
 				running = False
 			elif enemy_win == True:
 				ep_ended = True
 				perf += compute_performance(actions, 900, 900)
-				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "lost")
-				total_rw += reward
+				final_event = "lost"
 				print "Bot venceu: %f" % (perf)
 				running = False
 			elif actions == 900:
 				ep_ended = True
 				perf += compute_performance(actions, 900, 900)
-				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "draw")
-				total_rw += reward
+				final_event = "draw"
 				print "Empate: %f" % (perf)
 				running = False
-			else:
-				ep_ended = False
-				reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, "step")
-				total_rw += reward
-
-			'''if mode == "learn":
-				controller.updateQ(action, prev_state, controller.state, reward, ep_ended)'''
-
 			
 
 			if mode == "evaluate":
@@ -560,7 +552,11 @@ def game(mode, load, bot_type):
 					controller.save_table_Q(episode2, controller.state)
 				elif mode == "evaluate":
 					episode += 1
+					
 		if mode == "learn":
+			ep_ended = True
+			reward = controller.compute_reward(action, prev_state, controller.state, actions, ep_ended, final_event)
+			total_rw += reward
 			controller.updateQ(action, prev_state, controller.state, reward, ep_ended)
 
 if __name__ == '__main__':
