@@ -13,9 +13,9 @@ from itertools import (takewhile,repeat)
 #retirado de http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python
 #e adaptado para funcionar em Python 2
 def rawincount(filename):
-    f = open(filename, 'rb')
-    bufgen = takewhile(lambda x: x, (f.read(1024*1024) for _ in repeat(None)))
-    return sum( buf.count(b'\n') for buf in bufgen )
+	f = open(filename, 'rb')
+	bufgen = takewhile(lambda x: x, (f.read(1024*1024) for _ in repeat(None)))
+	return sum( buf.count(b'\n') for buf in bufgen )
 
 class Controller:
 
@@ -24,18 +24,18 @@ class Controller:
 		self.init_table_Q(load, state)
 
 
-    # TODO: carrega a tabela Q de um arquivo (se load!=None, entao load ira conter o nome do arquivo a ser carregado),
-    # ou, caso load==None, a funcao de inicializar uma tabela Q manualmente.
-    # Dica: a tabela Q possui um valor para cada possivel par de estado e acao. Cada objeto do tipo State possui um id unico
-    # (calculado por State.get_state_id), o qual pode ser usado para indexar a sua tabela Q, juntamente com o indice da acao.
-    # Para criacao da tabela Q, pode ser importante saber o numero total de estados do sistema. Isso dependera de quantas features
-    # voce utilizar e em quantos niveis ira discretiza-las (ver arquivo State.py para mais detalhes). O numero total de
-    # estados do sistema pode ser obtido atraves do metodo State.get_n_states.
-    # Uma lista completa com os estados propriamente ditos pode ser obtida atraves do metodo State.states_list.
+	# TODO: carrega a tabela Q de um arquivo (se load!=None, entao load ira conter o nome do arquivo a ser carregado),
+	# ou, caso load==None, a funcao de inicializar uma tabela Q manualmente.
+	# Dica: a tabela Q possui um valor para cada possivel par de estado e acao. Cada objeto do tipo State possui um id unico
+	# (calculado por State.get_state_id), o qual pode ser usado para indexar a sua tabela Q, juntamente com o indice da acao.
+	# Para criacao da tabela Q, pode ser importante saber o numero total de estados do sistema. Isso dependera de quantas features
+	# voce utilizar e em quantos niveis ira discretiza-las (ver arquivo State.py para mais detalhes). O numero total de
+	# estados do sistema pode ser obtido atraves do metodo State.get_n_states.
+	# Uma lista completa com os estados propriamente ditos pode ser obtida atraves do metodo State.states_list.
 	def init_table_Q(self,load, state):
 		states = state.states_list()
 		if load != None:
-			if len(states)*4 != rawincount(load) :
+			if len(states)*4 != rawincount(load):
 				print "Número de valores está errado!"
 				exit()
 			else:
@@ -68,25 +68,36 @@ class Controller:
 	# Recebe como o parametro a acao executada, o estado anterior e posterior a execucao dessa acao,
 	# o numero de passos desde o inicio do episodio, e um booleano indicando se o episodio acabou apos a execucao da acao.
 	# Caso o episodio tenha terminado, o ultimo parametro especifica como ele terminou (IA "won", IA "lost", "draw" ou "collision")
-    # Todas essas informacoes podem ser usadas para determinar que recompensa voce quer dar para o agente nessa situacao
+	# Todas essas informacoes podem ser usadas para determinar que recompensa voce quer dar para o agente nessa situacao
 	def compute_reward(self, action, prev_state, curr_state, nsteps, isEpisodeOver, howEpisodeEnded):
-        # Igor -> Falta melhorar a recompensa
+		# Igor -> Falta melhorar a recompensa
+
+		#Armando -> Alterei o esquema de recompensa para não ser um valor exato caso a situação x aconteça, mas sim um somatorio de tudo que ocorreu durante a jogada
 		reward = 0
 		if isEpisodeOver:
 			if howEpisodeEnded == "win":
-				reward = 5
+				reward += 5
 			elif howEpisodeEnded == "lost" or howEpisodeEnded == "collision":
-				reward = -5
+				reward += -5
 			else:
-				reward = -1
+				reward += -1
 		else:
-			reward=-0.08
+			reward += -0.08
 			prev_feats = prev_state.discretize_features(prev_state.compute_features())
 			curr_feats = curr_state.discretize_features(curr_state.compute_features())
-			if prev_feats[1] and action==4: #se o inimigo estava à vista e atirou
-				reward=2
-			if not prev_feats[1] and action==4: #atirou sem ver
-				reward=-2
+
+			#Recompensa tiro
+			if prev_feats[1] and action == 4: #se o inimigo estava à vista e atirou
+				reward += 2
+			if not prev_feats[1] and action == 4: #atirou sem ver
+				reward += -2
+
+			#Evita colisão
+			if curr_feats[0] < 4 & curr_feats[0] < prev_feats[0]: #Caso a distancia do inimigo seja inferior a um limite e o passo resultou em uma arpoximação ainda maior gera uma recompensa negativa
+				reward += -3
+			elif curr_feats[0] < 4 & curr_feats[0] > prev_feats[0]:	#Caso tenha se afastado enquanto a distancia seja baixa, ganha reforço positivo
+				reward += 3
+
 		reward *= 0.99 ** nsteps #diminuindo as recompensas futuras
 		return reward
 
@@ -116,4 +127,4 @@ class Controller:
 		best_action = sorted(look_up_Q, key=(lambda x: x[1]), reverse=True)[0][1]
 
 		prev_state_key = tuple(prev_feats+[action])
-		self.table_Q[prev_state_key] = (1-alpha)*self.table_Q[prev_state_key]  + alpha*(reward+ gama* best_action)
+		self.table_Q[prev_state_key] = (1-alpha)*self.table_Q[prev_state_key] + alpha*(reward + gama * best_action)
