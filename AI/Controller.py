@@ -35,7 +35,8 @@ class Controller:
 	def init_table_Q(self,load, state):
 		states = state.states_list()
 		if load != None:
-			if len(states)*4 != rawincount(load):
+
+			if len(states)*4 != rawincount(load)+1:
 				print "Número de valores está errado!"
 				exit()
 			else:
@@ -45,7 +46,7 @@ class Controller:
 			for action in [1,2,3,4]:
 				# listas não são hashable, por isso transformo para tupla para usar no dicionário, que possui acesso
 				# eficiente
-				self.table_Q[tuple(state+[action])] = file.readline() if load !=None else random.random()
+				self.table_Q[tuple(state+[action])] = float(file.readline()) if load !=None else random.random()
 		if load != None:
 			file.close()
 
