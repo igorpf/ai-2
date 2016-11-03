@@ -10,6 +10,7 @@ class State:
 		self.prox_arrow = 0
 		#Na ordem das features
 		self.levels = [20,2,4,2]
+		self.isLearning = False #
 
 
 	# TODO: calcula features, com base nos valores dos sensores.

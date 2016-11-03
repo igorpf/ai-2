@@ -98,7 +98,8 @@ class Controller:
 			elif curr_feats[0] < 4 & curr_feats[0] > prev_feats[0]:	#Caso tenha se afastado enquanto a distancia seja baixa, ganha reforço positivo
 				reward += 3
 
-		reward *= 0.99 ** nsteps #diminuindo as recompensas futuras
+		reward *= 0.997 ** nsteps #diminuindo as recompensas futuras
+		
 		return reward
 
 	# TODO: Deve consultar a tabela Q e escolher uma acao de acordo com a politica de exploracao
@@ -108,7 +109,7 @@ class Controller:
 		keys = [tuple(feats+[act]) for act in [1,2,3,4]]
 		look_up_Q = [tuple([key,self.table_Q[key]]) for key in keys]
 		best_actions = sorted(look_up_Q, key=(lambda x: x[1]) ,reverse=True)
-		if random.random() < 0.1: #experimenta coisas novas em 10% das vezes
+		if random.random() < 0.1 and self.state.isLearning: #experimenta coisas novas em 10% das vezes se estiver em modo de aprendizagem
 			return best_actions[randint(1,3)][0][-1]
 		else:
 			return best_actions[0][0][-1]

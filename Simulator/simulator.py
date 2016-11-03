@@ -401,7 +401,7 @@ def game(mode, load, bot_type):
 				controller.updateQ(action, prev_state, controller.state, reward, ep_ended)
 
 			prev_state = controller.state
-
+			controller.state.isLearning = (mode == "learn")
 			action = controller.take_action(controller.state)
 			actions += 1
 
