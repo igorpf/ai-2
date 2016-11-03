@@ -36,7 +36,7 @@ class Controller:
 		states = state.states_list()
 		if load != None:
 
-			if len(states)*4 != rawincount(load)+1:
+			if len(states)*4 != rawincount(load):
 				print "Número de valores está errado!"
 				exit()
 			else:
